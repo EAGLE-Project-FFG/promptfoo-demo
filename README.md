@@ -1,6 +1,6 @@
 # Evaluating KG construction with Promptfoo
 
-An LLM builds a small knowledge graph from Swisscom application tables. Promptfoo runs the
+An LLM builds a small knowledge graph from application tables. Promptfoo runs the
 construction and checks the result three ways: with deterministic assertions, by comparing
 the graph against a reference graph, and with an LLM judge. One test case is deliberately
 set up to fail, to show what a failure looks like.
