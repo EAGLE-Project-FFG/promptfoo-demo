@@ -1,0 +1,12 @@
+Construct a knowledge graph from these tables, using only facts supported by the data.
+
+Return only JSON, without Markdown or explanations:
+{"nodes": [{"id": "...", "type": "...", "name": "..."}],
+ "edges": [{"source": "...", "relation": "...", "target": "..."}]}
+
+Naming conventions: node types Application and Component; IDs app:<Application ID>
+and component:<Component ID>; names copied from the tables; relation has_component
+directed from application to component.
+
+Data:
+{{data}}

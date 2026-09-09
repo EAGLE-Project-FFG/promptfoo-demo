@@ -1,0 +1,66 @@
+{
+  "nodes": [
+    {
+      "id": "app:EAR-173",
+      "type": "Application",
+      "name": "B2B Gateway Infrastruktur"
+    },
+    {
+      "id": "app:EAR-172",
+      "type": "Application",
+      "name": "Chromeleon"
+    },
+    {
+      "id": "component:34",
+      "type": "Component",
+      "name": "IBM Datapower"
+    },
+    {
+      "id": "component:39",
+      "type": "Component",
+      "name": "Management PC"
+    },
+    {
+      "id": "component:40",
+      "type": "Component",
+      "name": "Desktop Client"
+    },
+    {
+      "id": "component:41",
+      "type": "Component",
+      "name": "Notebook Client"
+    },
+    {
+      "id": "component:42",
+      "type": "Component",
+      "name": "MSSQL BD"
+    }
+  ],
+  "edges": [
+    {
+      "source": "app:EAR-173",
+      "relation": "has_component",
+      "target": "component:34"
+    },
+    {
+      "source": "app:EAR-172",
+      "relation": "has_component",
+      "target": "component:39"
+    },
+    {
+      "source": "app:EAR-172",
+      "relation": "has_component",
+      "target": "component:40"
+    },
+    {
+      "source": "app:EAR-172",
+      "relation": "has_component",
+      "target": "component:41"
+    },
+    {
+      "source": "app:EAR-172",
+      "relation": "has_component",
+      "target": "component:42"
+    }
+  ]
+}

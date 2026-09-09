@@ -1,0 +1,11 @@
+general.csv (selected columns and records):
+Application Service ID,Application ID,Application Name,Beschreibung
+4,EAR-168,Elvis,"Vigilance, Nebenwirkungsmeldungen, Weblogic --> Wird durch Medango abgelöst
+Oracle DB"
+
+komponenten.csv (selected columns and records):
+Application Service ID,Component ID,Name,Type,Description
+4.0,35,Elvis Applicationserver,Application,Weblogic + Java mit integriertem PrintingService
+4.0,45,Elvis DB,Database,Oracle 19
+4.0,46,Backup Fileshare,Fileshare,NFS Fileshare für Backups
+4.0,47,Weblogic,Middleware,"Benötigte Middleware für Elvis Applicationserver und Printing Service, stellt Java Enterprise Funktionalität bereit"

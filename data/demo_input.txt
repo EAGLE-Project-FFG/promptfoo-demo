@@ -1,0 +1,12 @@
+general.csv (selected columns and records):
+Application Service ID,Application ID,Application Name
+2,EAR-173,B2B Gateway Infrastruktur
+3,EAR-172,Chromeleon
+
+komponenten.csv (selected columns and records):
+Application Service ID,Component ID,Name
+2.0,34,IBM Datapower
+3.0,39,Management PC
+3.0,40,Desktop Client
+3.0,41,Notebook Client
+3.0,42,MSSQL DB

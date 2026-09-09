@@ -1,0 +1,130 @@
+description: "KG construction from SwissCom application tables"
+
+prompts:
+  - file://prompts/construct_kg.txt
+
+providers:
+  - id: openai:chat:gpt-5.4-mini
+    config:
+      reasoning_effort: low
+      max_completion_tokens: 4096
+
+defaultTest:
+  options:
+    # Grades the llm-rubric assertion below. Not the model that builds the graph.
+    provider:
+      id: openai:chat:gpt-5.4-mini
+      config:
+        reasoning_effort: low
+  assert:
+    # Format. Built-in string checks, no reference graph and no model needed.
+    - type: is-json
+      metric: Format
+    - type: not-contains
+      value: "```"
+      metric: Format
+    - type: contains
+      value: has_component
+      metric: Format
+    # Every node ID follows the convention from the prompt.
+    - type: javascript
+      value: JSON.parse(output).nodes.every((n) => /^(app|component):.+/.test(n.id))
+      metric: Format
+    # Describe the run rather than the output; only meaningful with --no-cache.
+    - type: latency
+      threshold: 60000
+      metric: Latency
+    - type: cost
+      threshold: 0.05
+      metric: Cost
+
+tests:
+  # 1. Two applications for which we wrote down the expected graph.
+  - description: Reference excerpt, correct reference
+    vars:
+      data: file://data/demo_input.txt
+    assert:
+      # Deterministic: the names and IDs that the tables have to produce.
+      - type: contains-all
+        metric: Content
+        value:
+          - B2B Gateway Infrastruktur
+          - Chromeleon
+          - IBM Datapower
+          - Management PC
+          - Desktop Client
+          - Notebook Client
+          - MSSQL DB
+      - type: contains-all
+        metric: Content
+        value:
+          ["app:EAR-173", "app:EAR-172", "component:34", "component:39",
+           "component:40", "component:41", "component:42"]
+      - type: javascript
+        value: JSON.parse(output).nodes.length === 7 && JSON.parse(output).edges.length === 5
+        metric: Content
+      # Ground truth: set comparison against data/demo_ground_truth.json.
+      - type: python
+        value: file://graph_checks.py:check_nodes
+        metric: NodeF1
+        config:
+          reference: data/demo_ground_truth.json
+      - type: python
+        value: file://graph_checks.py:check_edges
+        metric: EdgeF1
+        config:
+          reference: data/demo_ground_truth.json
+
+  # 2. Same excerpt and the same generated graph, compared against a reference in
+  #    which one component name carries a typo (MSSQL DB -> MSSQL BD). Included to
+  #    show what a failing assertion looks like, and that a wrong reference makes a
+  #    correct graph fail. Expected: NodeF1 fails at 0.86, everything else passes.
+  - description: Reference excerpt, reference with a typo (expected to fail)
+    vars:
+      data: file://data/demo_input.txt
+    assert:
+      - type: python
+        value: file://graph_checks.py:check_nodes
+        metric: NodeF1
+        config:
+          reference: data/demo_ground_truth_typo.json
+      - type: python
+        value: file://graph_checks.py:check_edges
+        metric: EdgeF1
+        config:
+          reference: data/demo_ground_truth_typo.json
+
+  # 3. An excerpt with no reference graph, and with the two German free-text columns
+  #    kept in. Those columns talk about records without being records, so they invite
+  #    invented nodes. With no reference to compare against, the checks are spot checks
+  #    plus a judge that reads the source tables itself.
+  - description: Unlabelled excerpt with free-text columns, spot checks and a judge
+    vars:
+      data: file://data/elvis_input.txt
+    assert:
+      - type: contains-all
+        metric: Content
+        value:
+          ["Elvis", "Elvis Applicationserver", "Elvis DB", "Backup Fileshare", "Weblogic"]
+      # A blocklist of the specific inventions we thought of in advance.
+      - type: not-contains-any
+        metric: Content
+        value: ["Medango", "PrintingService", "Printing Service"]
+
+      # LLM-as-a-judge. The blocklist above only catches inventions we could name in
+      # advance; the judge states the criterion once and applies it to anything.
+      # Keep the rubric inline: promptfoo does not run Nunjucks over a rubric loaded
+      # with `value: file://...`, so {{data}} would reach the judge as literal text
+      # and it would grade the graph without ever seeing the tables.
+      - type: llm-rubric
+        metric: Faithfulness
+        # Promptfoo assumes pass when the grader omits the field, so let the score decide.
+        threshold: 0.8
+        value: |
+          Every node in the graph must correspond to a record in the tables below.
+
+          {{data}}
+
+          The Beschreibung and Description columns are prose about the records, not
+          records of their own. Fail if a node comes from that prose instead of from a
+          record, and name it. Otherwise pass.
