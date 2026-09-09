@@ -7,7 +7,7 @@ set up to fail, to show what a failure looks like.
 
 Everything runs from a single command, described in section 6.
 
-## 1. The input
+## 1. Input
 
 [data/demo_input.txt](data/demo_input.txt) is an excerpt from the existing data: two applications and their five components, stored in two CSV files.
 
@@ -15,7 +15,7 @@ The two tables join on **Application Service ID**, written `2` in one file and `
 other. The model has to recognise that join and the numeric equivalence itself, the prompt
 does not explain either. 
 
-## 2. The expected graph
+## 2. Expected Graph
 
 [data/demo_ground_truth.json](data/demo_ground_truth.json) is the reference for that
 excerpt: seven nodes and five edges.
@@ -34,7 +34,7 @@ Chromeleon (EAR-172)
 Nodes carry an ID, a type (`Application` or `Component`), and the exact name from the CSV.
 IDs use `app:EAR-173` and `component:34` to keep the two kinds of identifier apart.
 
-## 3. The prompt
+## 3. Prompt
 
 [prompts/construct_kg.txt](prompts/construct_kg.txt) asks the model to construct a
 knowledge graph using only facts supported by the data. It gives the JSON format and the
@@ -47,13 +47,13 @@ different labels. So this evaluates construction within a small agreed vocabular
 [promptfooconfig.yaml](promptfooconfig.yaml) runs the prompt with `gpt-5.4-mini`. The JSON
 it returns is the constructed graph.
 
-## 4. The checks
+## 4. Assertions
 
 Every assertion carries a `metric:` label, so the results table shows one column per group
 of checks rather than a long list of pass/fail rows. The seven columns are `Format`,
 `Content`, `NodeF1`, `EdgeF1`, `Faithfulness`, `Latency` and `Cost`.
 
-### Deterministic assertions
+### Deterministic Assertions
 
 Promptfoo's built-in checks. They need no reference graph and no second model call, they
 cost nothing, and they give the same answer every run.
@@ -90,7 +90,7 @@ through to the Python function:
     reference: data/demo_ground_truth.json
 ```
 
-### The LLM judge
+### LLM-as-a-Judge
 
 The deterministic assertions check form and a handful of strings we listed by hand. The
 reference comparison checks content exactly, but only for an excerpt someone has labelled.
@@ -133,7 +133,7 @@ Three details worth knowing:
 
 This is the one check here whose verdict is not reproducible run to run.
 
-## 5. The three test cases
+## 5. Test Cases
 
 **1. Reference excerpt, correct reference.** The deterministic assertions and the reference
 comparison on a graph that should come out right. Result: everything green, `NodeF1` and `EdgeF1`
@@ -183,7 +183,7 @@ With no reference to compare against, the deterministic checks can only be spot 
 `contains-all` for the five names that must appear, and `not-contains-any` as a blocklist of
 the three inventions we can name in advance. The judge covers what a blocklist cannot.
 
-## 6. Running it
+## 6. Running the Evaluation
 
 Requirements: Node.js 24 and Python 3.
 
@@ -221,7 +221,7 @@ columns.
 Note that `promptfoo view` shows one evaluation at a time out of a local history in
 `.promptfoo/`. Each `eval` run adds a new entry, and the UI opens the most recent.
 
-### Testing the evaluator
+### (Unit)Testing the Evaluator
 
 The commands above evaluate the model. These two check our own evaluation code instead, so
 they need no API key and take milliseconds:
