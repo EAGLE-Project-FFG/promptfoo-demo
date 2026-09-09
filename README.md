@@ -9,22 +9,11 @@ Everything runs from a single command, described in section 6.
 
 ## 1. The input
 
-[data/demo_input.txt](data/demo_input.txt) is an excerpt from the existing
-[Swisscom data](../data/SwissCom/): two applications and their five components, taken from
-two CSV files.
-
-| Original source | Selected records | Selected columns |
-| --- | --- | --- |
-| [general.csv](../data/SwissCom/general.csv) | Application Service ID `2` and `3` | Application Service ID, Application ID, Application Name |
-| [komponenten.csv](../data/SwissCom/komponenten.csv) | Application Service ID `2.0` and `3.0` | Application Service ID, Component ID, Name |
-
-The excerpt preserves these field values. Other records and columns are left out to keep
-the example small. No source CSV was modified and no facts were added.
+[data/demo_input.txt](data/demo_input.txt) is an excerpt from the existing data: two applications and their five components, stored in two CSV files.
 
 The two tables join on **Application Service ID**, written `2` in one file and `2.0` in the
-other. The model has to recognise that join and the numeric equivalence itself; the prompt
-does not explain either. This service key is not the same as the application's `EAR-...`
-identifier.
+other. The model has to recognise that join and the numeric equivalence itself, the prompt
+does not explain either. 
 
 ## 2. The expected graph
 
@@ -43,13 +32,7 @@ Chromeleon (EAR-172)
 ```
 
 Nodes carry an ID, a type (`Application` or `Component`), and the exact name from the CSV.
-IDs use `app:EAR-173` and `component:34` to keep the two kinds of identifier apart. Only
-component membership is represented; component subtypes and other properties are out of
-scope here.
-
-The reference was written from the selected source records for this demo. It is not a
-pre-existing full Swisscom reference graph. It stays out of the prompt and is read only by
-the evaluator.
+IDs use `app:EAR-173` and `component:34` to keep the two kinds of identifier apart.
 
 ## 3. The prompt
 
@@ -59,11 +42,10 @@ naming conventions, but no table-by-table extraction instructions and no join pr
 
 The naming conventions are there because the evaluator compares IDs, types and relation
 labels exactly. Without them an equivalent graph could fail purely because it chose
-different labels. So this evaluates construction within a small agreed vocabulary, not the
-free choice of an ontology.
+different labels. So this evaluates construction within a small agreed vocabulary, not a full ontology.
 
 [promptfooconfig.yaml](promptfooconfig.yaml) runs the prompt with `gpt-5.4-mini`. The JSON
-it returns is the constructed graph. There is no graph database to set up.
+it returns is the constructed graph.
 
 ## 4. The checks
 
@@ -87,8 +69,7 @@ cost nothing, and they give the same answer every run.
 | `not-contains-any` | test 3 | `Medango`, `PrintingService` and `Printing Service` do not appear |
 | `latency`, `cost` | every test | the request stayed under 60 s and $0.05 |
 
-The two `javascript` assertions are one-line expressions written directly in the YAML; the
-JSON parsing and the regex are done by Promptfoo, not by us.
+The two `javascript` assertions are one-line expressions written directly in the YAML.
 
 ### Comparison against the reference graph
 
@@ -108,9 +89,6 @@ through to the Python function:
   config:
     reference: data/demo_ground_truth.json
 ```
-
-That is what lets the same two functions be pointed at a different reference, which the
-next section uses.
 
 ### The LLM judge
 
@@ -158,13 +136,13 @@ This is the one check here whose verdict is not reproducible run to run.
 ## 5. The three test cases
 
 **1. Reference excerpt, correct reference.** The deterministic assertions and the reference
-comparison on a graph that should come out right. Everything green, `NodeF1` and `EdgeF1`
+comparison on a graph that should come out right. Result: everything green, `NodeF1` and `EdgeF1`
 at 1.00.
 
 **2. Reference excerpt, reference with a typo.** The same excerpt as test case 1, compared
 against
-[data/demo_ground_truth_typo.json](data/demo_ground_truth_typo.json) — a copy of the
-reference in which one component name is misspelled `MSSQL BD`. This one is expected to
+[data/demo_ground_truth_typo.json](data/demo_ground_truth_typo.json), which is a copy of the
+reference in which one component name is misspelled `MSSQL BD` (instead of `DB`). This one is expected to
 fail:
 
 ```
@@ -174,9 +152,9 @@ FAIL  NodeF1  score=0.86  TP=6 FP=1 FN=1 F1=0.86;
 PASS  EdgeF1  score=1.00  TP=5 FP=0 FN=0 F1=1.00
 ```
 
-What it shows is worth more than the failure itself:
+It shows:
 
-- The failure is localised. One metric goes red and names the exact tuple on each side; the
+- The failure is localised. One metric goes red and names the exact tuple on each side. The
   other seven assertions in that test case stay green.
 - `EdgeF1` is unaffected, because edges refer to node IDs and the typo is in a name.
 - The model was right and the reference was wrong. An F1 comparison measures agreement with
@@ -188,9 +166,7 @@ separately and could in principle differ. In every run so far they came out iden
 **3. Unlabelled excerpt, spot checks and a judge.** A different excerpt,
 [data/elvis_input.txt](data/elvis_input.txt) — application `EAR-168` and its four
 components — with the two German free-text columns `Beschreibung` and `Description` kept
-in. Nobody wrote a reference graph for it, which is the normal situation: there are 69
-applications in [general.csv](../data/SwissCom/general.csv) and no reference graph for any
-of them.
+in. Nobody wrote a reference graph for it, which is the normal situation.
 
 Those columns are where the interesting failures live, because they talk *about* records
 without *being* records:
@@ -209,16 +185,16 @@ the three inventions we can name in advance. The judge covers what a blocklist c
 
 ## 6. Running it
 
-Node.js 24 and Python 3. No Python packages needed.
+Requirements: Node.js 24 and Python 3.
 
 ```bash
-cd Promptfoo_minimal
 nvm use 24  # if you manage Node with nvm
 export PROMPTFOO_PYTHON="$(command -v python3)"
 export PROMPTFOO_CONFIG_DIR="$PWD/.promptfoo"
+cp .env.example .env
 ```
 
-Put your OpenAI key in `.env` (keep the existing file if it is already set up):
+Put your OpenAI key in `.env`:
 
 ```dotenv
 OPENAI_API_KEY=your-openai-api-key
@@ -231,13 +207,10 @@ npx promptfoo@0.122.2 eval --env-file .env --no-cache -o results/kg.json
 npx promptfoo@0.122.2 view
 ```
 
-That is the whole evaluation: one command, one results table, three rows. Expect two rows
-green and one red, the red one being test case 2.
+That runs the whole evaluation. Expect two rows green (success) and one red (fail), the red one being test case 2.
 
-The run makes four model calls before any retries — three graph constructions and one
-grading call for the judge — for well under a cent at `gpt-5.4-mini` prices. A failed
-assertion is an evaluation result; an authentication or API error means the call did not
-complete.
+The run makes four model calls before any retries (three graph constructions and one
+grading call for the judge) for well under a cent at `gpt-5.4-mini` prices. 
 
 `--no-cache` is there on purpose. Promptfoo caches responses by default, and a cached run
 replays old answers rather than evaluating anything: `Latency` and `Cost` then describe a
@@ -246,8 +219,7 @@ nothing. Drop the flag if you want cheap repeat runs and do not care about those
 columns.
 
 Note that `promptfoo view` shows one evaluation at a time out of a local history in
-`.promptfoo/`. Each `eval` run adds a new entry, and the UI opens the most recent; there is
-a selector for the older ones.
+`.promptfoo/`. Each `eval` run adds a new entry, and the UI opens the most recent.
 
 ### Testing the evaluator
 
@@ -259,8 +231,8 @@ python3 -m unittest -v test_graph_checks.py
 npx promptfoo@0.122.2 validate config -c promptfooconfig.yaml
 ```
 
-[graph_checks.py](graph_checks.py) is the only custom code here — everything else is a
-Promptfoo built-in — and it is where a silent bug would do the most damage, because a wrong
+[graph_checks.py](graph_checks.py) is the only custom code here (everything else is a
+Promptfoo built-in) and it is where a silent bug would do the most damage, because a wrong
 F1 function still reports confident-looking numbers. [test_graph_checks.py](test_graph_checks.py)
 feeds it hand-written graphs and checks that set comparison ignores ordering, that dropping
 an edge gives 8/9 and adding one gives 10/11, that unusable output fails cleanly instead of
@@ -272,20 +244,3 @@ type or bad indentation before you spend API calls on a run that could not have 
 
 Neither says anything about whether the model builds good graphs or whether the rubric is a
 good rubric. Only `eval` answers those.
-
-## 7. Scope
-
-This covers the KG construction step on one small excerpt with a hand-written reference
-graph. It is not a benchmark of extraction quality, and numbers from seven nodes do not
-generalise. More excerpts can be added as further test cases.
-
-The three kinds of check cover different ground, which is why all three are here.
-Deterministic assertions are free and reproducible, but only check form and strings we
-listed by hand. The reference comparison is exact, but needs an excerpt someone has
-labelled. The judge needs no labels and is therefore the only one of the three that could
-be pointed at all 69 applications, but its verdict varies between runs and its rubric here
-states a single criterion rather than a full specification of a correct graph.
-
-An earlier version of this directory held a schema-extraction experiment with a LiteLLM
-provider, generated scenarios and heuristic entity checks. That has been removed. This
-evaluation is the only one here, and there is no scenario-generation step.
