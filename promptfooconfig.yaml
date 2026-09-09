@@ -1,4 +1,4 @@
-description: "KG construction from SwissCom application tables"
+description: "KG construction from application tables"
 
 prompts:
   - file://prompts/construct_kg.txt
