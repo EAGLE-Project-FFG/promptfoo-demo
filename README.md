@@ -1,11 +1,10 @@
 # Evaluating KG construction with Promptfoo
 
-An LLM builds a small knowledge graph from application tables. Promptfoo runs the
-construction and checks the result three ways: with deterministic assertions, by comparing
-the graph against a reference graph, and with an LLM judge. One test case is deliberately
-set up to fail, to show what a failure looks like.
+This demo uses an LLM to turn application tables into a small knowledge graph. Promptfoo
+evaluates the result in three ways: deterministic assertions, comparison
+with a reference graph (ground truth), and an LLM judge. One test case is intentionally designed to fail, to see how Promptfoo reports an incorrect result.
 
-Everything runs from a single command, described in section 6.
+Instructions to run the evaluation are described in Section 6.
 
 ## 1. Input
 
